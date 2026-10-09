@@ -1,0 +1,5 @@
+common_name,threshold_p99,threshold_reliable,AUC,Brier,LogLoss,note
+Abyssinian Nightjar,0.757043,True,0.9307,0.0855,0.2538,
+African Black-headed Oriole,0.104,False,,,,Fallback: single outcome class in validation data
+Red-billed Firefinch,0.999626,True,0.7079,0.0499,0.2046,
+Three-banded Plover,0.24005,True,0.6644,0.0066,0.0376,

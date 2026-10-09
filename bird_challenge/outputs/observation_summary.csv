@@ -1,0 +1,5 @@
+common_name,threshold_p99,n_predictions,n_observations,n_sub_threshold,n_needs_review,pct_observations
+Abyssinian Nightjar,0.757,10187,2700,7487,0,26.5
+African Black-headed Oriole,0.104,18054,0,0,18054,0.0
+Red-billed Firefinch,0.9996,235,0,235,0,0.0
+Three-banded Plover,0.2401,1015,570,445,0,56.2

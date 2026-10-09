@@ -1,0 +1,5 @@
+common_name,birdnet_version,n_validated,n_true_positives,method,intercept_b0,coef_logit_b1,threshold_p99,threshold_reliable
+Abyssinian Nightjar,v2.4,150,117,logistic_logit_score,2.632614,1.726746,0.757043,True
+African Black-headed Oriole,v2.4,150,150,fallback_min_confidence,,,0.104,False
+Red-billed Firefinch,v2.4,101,6,logistic_logit_score,-1.642914,0.790406,0.999626,True
+Three-banded Plover,v2.4,150,149,logistic_logit_score,5.022928,0.371231,0.24005,True

@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.env
+.env.local
+*.db
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Large data files
+*.csv
+!bird_challenge/outputs/observation_summary.csv
+!bird_challenge/outputs/site_observation_summary.csv
+!bird_challenge/outputs/model_evaluation.csv
+!bird_challenge/outputs/species_thresholds.csv
+
+# Node
+node_modules/
+.vercel/
+
+# OS
+.DS_Store
+Thumbs.db
