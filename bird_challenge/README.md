@@ -1,62 +1,79 @@
-# Bird Challenge — BirdNET Score Validation
+# Bird Challenge — From BirdNET Predictions to Confirmed Observations
 
-## Overview
-
-BirdNET produces confidence scores (0–1) for acoustic species detections, but these scores are not calibrated probabilities. I validated whether they can be trusted as such, and derived per-species detection thresholds at 99% precision using a labelled validation dataset of 1,529 clips across 23 species.
+**Project:** Savanna Monitoring Pilot (SAVMON) — Lewa, Kenya
+**BirdNET version:** v2.4
 
 ## Problem
 
-Given:
-- `birdnet_predictions.csv` — 29,491 BirdNET predictions with confidence scores
-- `validation_results.csv` — 1,529 human-validated clips (ground truth labels)
+BirdNET produces confidence scores (0–1) for acoustic species detections, but these
+are not calibrated probabilities. The same score means something different for
+different species. For each species, I derived the minimum confidence score that
+achieves 99% precision, then labelled all 29,491 predictions as confirmed observations
+or not.
 
-I needed to:
-1. Assess whether the validation set is representative of the full predictions dataset
-2. Calibrate BirdNET scores into reliable probabilities per species
-3. Derive a confidence threshold per species that achieves ≥99% precision
-4. Label all 29,491 predictions as confirmed observations or not
+## Data
+
+- `birdnet_predictions.csv` — 29,491 BirdNET predictions from 43 sites, covering 4 species
+- `validation_results.csv` — 551 ornithologist-validated clips (ground truth)
+
+Validated clip breakdown:
+
+| Species | Clips validated | BirdNET correct | % correct |
+|---------|----------------|----------------|-----------|
+| Abyssinian Nightjar | 150 | 117 | 78% |
+| African Black-headed Oriole | 150 | 150 | 100% |
+| Red-billed Firefinch | 101 | 6 | 6% |
+| Three-banded Plover | 150 | 149 | 99% |
+
+This is why a single global threshold fails — it would flood the output with false
+Firefinch detections or discard valid Nightjar observations.
 
 ## Approach
 
-### 1. Exploratory Data Analysis (Sections 1–6)
+I applied a logit transform to reverse BirdNET's internal sigmoid compression, then
+fit and compared 5 calibration models per species:
 
-- Confirmed all 1,529 validation clips exist in the predictions dataset
-- Checked data quality: nulls, dtypes, score ranges, BirdNET version consistency
-- Assessed representativeness using:
-  - KS test (score distribution similarity per species)
-  - Chi-squared test (bin coverage across the score range)
-  - Site coverage (validation clips span the same sites as predictions)
-  - Effective Positive Values (EPV) check per species
+| Method | Description |
+|--------|-------------|
+| M1 | Logistic regression on raw scores |
+| M2 ★ | Logistic regression on logit-transformed scores (chosen) |
+| M3 | Isotonic regression |
+| M4 | Platt scaling |
+| M5 | Beta calibration |
 
-### 2. Calibration Modelling (Section 7)
+Models were evaluated on AUC, Brier score, and log-loss. M2 was selected as the
+production method — analytically invertible and robust across species. The 99%
+threshold per species is derived as:
 
-I fit 5 calibration models per species:
-- M1: Logistic regression on raw scores
-- M2: Logistic regression on logit-transformed scores
-- M3: Isotonic regression
-- M4: Platt scaling
-- M5: Beta calibration
+```
+threshold = sigmoid( ( ln(0.99/0.01) − β₀ ) / β₁ )
+```
 
-Models were evaluated on AUC, Brier score, log-loss, and calibration error.
+## Results
 
-### 3. Threshold Derivation
+| Species | Threshold | Observations | Out of |
+|---------|-----------|-------------|--------|
+| Abyssinian Nightjar | 0.757 | 2,700 | 10,187 |
+| African Black-headed Oriole | 0.104 | 17,646 | 18,054 |
+| Red-billed Firefinch | 0.9996 | 0 | 235 |
+| Three-banded Plover | 0.240 | 570 | 1,015 |
+| **Total** | | **20,916** | **29,491** |
 
-For each species I derived the minimum confidence score that achieves ≥99% precision using the best-fitting calibration model. Species with fewer than 10 positive examples used a rule-based fallback.
-
-### 4. Labelling
-
-All 29,491 predictions were labelled as `observation = 1` (confirmed) or `0` (not confirmed) using the per-species thresholds.
+The Firefinch threshold of 0.9996 means zero predictions qualify — BirdNET cannot
+be trusted for this species in this acoustic environment.
 
 ## Outputs
 
 | File | Description |
 |------|-------------|
-| `outputs/species_thresholds.csv` | Per-species 99%-precision threshold and calibration model used |
-| `outputs/model_evaluation.csv` | AUC, Brier, log-loss for all models per species |
-| `outputs/observation_summary.csv` | Total confirmed observations per species |
+| `outputs/species_thresholds.csv` | Per-species 99%-precision threshold |
+| `outputs/model_evaluation.csv` | AUC, Brier, log-loss for all 5 models |
+| `outputs/birdnet_predictions_labelled.csv` | All 29,491 predictions with observation label |
+| `outputs/observation_summary.csv` | Confirmed observations per species |
 | `outputs/site_observation_summary.csv` | Confirmed observations per species per site |
-
-Diagnostic plots (calibration curves, score distributions, precision-recall curves) are generated by the notebook.
+| `outputs/calibration_curves.png` | Calibration curves per species |
+| `outputs/score_distributions.png` | Score distributions by validation outcome |
+| `outputs/precision_recall_curves.png` | Precision-recall curves with thresholds |
 
 ## Requirements
 
@@ -68,11 +85,18 @@ scipy>=1.11.0
 matplotlib>=3.7.0
 ```
 
-Install with:
 ```bash
 pip install -r requirements.txt
 ```
 
 ## Running
 
-Open `bird_challenge.ipynb` in Jupyter and run all cells. The raw data files (`birdnet_predictions.csv`, `validation_results.csv`) are not included in this repository due to size — place them in a `Data Birds/` directory at the repo root.
+Open `bird_challenge.ipynb` in Jupyter and run all cells. Place the raw data files
+(`birdnet_predictions.csv`, `validation_results.csv`) in a `Data Birds/` directory
+at the project root — they are not included in this repository due to size.
+
+For the standalone production pipeline:
+
+```bash
+python bird_pipeline.py
+```
