@@ -189,19 +189,6 @@ cannot get both high precision and high recall for this species at the same time
 
 ---
 
-## Reliability: do the probabilities actually mean what they say?
-
-![Reliability diagrams](outputs/reliability_diagrams.png)
-
-A reliability diagram answers a simple question: when the model says "80%
-probability of being correct," is it actually right about 80% of the time?
-A perfectly calibrated model sits on the diagonal. Points above the diagonal mean
-the model is underconfident (it says 80% but actually gets it right 90% of the
-time). Points below mean overconfident.
-
-The logit-scale logistic method tracks the diagonal most closely, particularly for
-the Nightjar where calibration matters most.
-
 ---
 
 ## Results: labelling the 29,491 predictions
@@ -279,7 +266,7 @@ All outputs land in `outputs/bird/`:
 - `birdnet_predictions_labelled.csv` — the 29,491 predictions with the `observation` column added
 - `species_thresholds.csv` — the threshold table ready to load into the platform database
 - `site_observation_summary.csv` — observation counts per acoustic monitoring site per species
-- `calibration_curves.png`, `score_distributions.png`, `precision_recall_curves.png`, `reliability_diagrams.png` — the four diagnostic plots
+- `calibration_curves.png`, `score_distributions.png`, `precision_recall_curves.png` — diagnostic plots
 
 ---
 
