@@ -31,3 +31,5 @@ Thumbs.db
 
 # Automation scripts
 auto_commit.ps1
+
+!bird_challenge/outputs/birdnet_predictions_labelled.csv
