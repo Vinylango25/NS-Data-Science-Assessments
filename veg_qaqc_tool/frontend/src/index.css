@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+  html { @apply bg-gray-950 text-gray-100; }
+  body { @apply bg-gray-950 text-gray-100 antialiased; }
+}
+
+@layer components {
+  /* Severity badges */
+  .badge-high   { @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-red-900/60 text-red-300 ring-1 ring-red-700/50; }
+  .badge-medium { @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-amber-900/60 text-amber-300 ring-1 ring-amber-700/50; }
+  .badge-low    { @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-blue-900/60 text-blue-300 ring-1 ring-blue-700/50; }
+
+  /* QC status badges */
+  .badge-pass    { @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-emerald-900/60 text-emerald-300 ring-1 ring-emerald-700/50; }
+  .badge-warning { @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-amber-900/60 text-amber-300 ring-1 ring-amber-700/50; }
+  .badge-fail    { @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-red-900/60 text-red-300 ring-1 ring-red-700/50; }
+
+  /* Cards */
+  .card { @apply bg-gray-900 border border-gray-800 rounded-xl; }
+  .card-p { @apply bg-gray-900 border border-gray-800 rounded-xl p-5; }
+
+  /* Stat card */
+  .stat-card { @apply bg-gray-900 border border-gray-800 rounded-xl p-5; }
+
+  /* Section titles */
+  .page-title    { @apply text-2xl font-bold text-white mb-1; }
+  .section-title { @apply text-base font-semibold text-gray-200 mb-4; }
+
+  /* Table */
+  .dark-table { @apply min-w-full text-sm; }
+  .dark-table thead { @apply text-xs text-gray-500 uppercase tracking-wider; }
+  .dark-table thead th { @apply px-4 py-3 text-left font-medium bg-gray-900/80; }
+  .dark-table tbody { @apply divide-y divide-gray-800; }
+  .dark-table tbody tr { @apply hover:bg-gray-800/60 transition-colors; }
+  .dark-table tbody td { @apply px-4 py-3 text-gray-300; }
+
+  /* Inputs */
+  .dark-input { @apply bg-gray-800 border border-gray-700 text-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 placeholder-gray-500; }
+  .dark-select { @apply bg-gray-800 border border-gray-700 text-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500; }
+
+  /* Button */
+  .btn-primary { @apply flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 disabled:text-gray-500 text-white text-sm font-medium px-5 py-2.5 rounded-lg transition-colors; }
+}
