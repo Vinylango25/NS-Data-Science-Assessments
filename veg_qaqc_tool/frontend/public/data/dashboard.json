@@ -1,0 +1,64 @@
+{
+  "run_at": "2026-10-08T11:56:13.971362Z",
+  "status": "complete",
+  "data_source": "csv",
+  "n_plots_registered": 31,
+  "n_plots_viable": 30,
+  "n_plots_surveyed": 30,
+  "n_surveys_total": 32,
+  "n_surveys_approved": 30,
+  "n_surveys_rejected": 2,
+  "n_quadrats": 640,
+  "pct_quadrats_with_herbs": 98.9,
+  "n_flags_high": 4,
+  "n_flags_medium": 94,
+  "n_flags_low": 113,
+  "n_pending_species": 107,
+  "flag_type_summary": [
+    {
+      "flag_type": "canonical_trailing_whitespace",
+      "severity": "LOW",
+      "n": 64
+    },
+    {
+      "flag_type": "duplicate_survey",
+      "severity": "HIGH",
+      "n": 2
+    },
+    {
+      "flag_type": "non_standard_canonical",
+      "severity": "LOW",
+      "n": 45
+    },
+    {
+      "flag_type": "species_pending_review",
+      "severity": "MEDIUM",
+      "n": 90
+    },
+    {
+      "flag_type": "survey_duration_outlier",
+      "severity": "MEDIUM",
+      "n": 1
+    },
+    {
+      "flag_type": "survey_rejected",
+      "severity": "HIGH",
+      "n": 2
+    },
+    {
+      "flag_type": "transect_length_missing",
+      "severity": "MEDIUM",
+      "n": 1
+    },
+    {
+      "flag_type": "transect_too_long",
+      "severity": "LOW",
+      "n": 4
+    },
+    {
+      "flag_type": "transect_too_short",
+      "severity": "MEDIUM",
+      "n": 2
+    }
+  ]
+}
