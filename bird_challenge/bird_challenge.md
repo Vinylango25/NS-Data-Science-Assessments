@@ -118,28 +118,109 @@ That is our threshold. Every prediction above it gets labelled as an observation
 
 ---
 
+## Comparing five calibration methods
+
+Rather than just applying the Wood & Kahl approach and moving on, we tested it
+against four alternatives to make sure we were not missing something better.
+
+| Method | What it does |
+|--------|-------------|
+| **1. Logistic on raw score** | Same logistic regression but uses the raw 0–1 confidence score as input instead of the logit-transformed version |
+| **2. Logistic on logit score ★** | Our chosen approach — logistic regression on the logit-transformed score |
+| **3. Isotonic regression** | A non-parametric method that fits a monotone staircase to the data with no assumed shape |
+| **4. Platt scaling** | Essentially the same as method 1, reframed as a two-parameter calibration layer — included for completeness |
+| **5. Beta calibration** | Uses both `log(score)` and `log(1-score)` as features, giving it more flexibility at the extremes of the 0–1 scale |
+
+We compared them on four metrics:
+
+- **Threshold at p=0.99** — the actual confidence score cutoff we would use in practice
+- **AUC** — how well the model separates true positives from false positives across all possible thresholds (higher is better, max = 1.0)
+- **Brier score** — how far off the predicted probabilities are from actual outcomes, on average (lower is better)
+- **Log-loss** — similar to Brier but penalises confident wrong predictions more heavily (lower is better)
+
+### The full comparison table
+
+| Species | Method | Threshold | AUC | Brier | Log-loss |
+|---------|--------|-----------|-----|-------|----------|
+| Abyssinian Nightjar | Logistic — raw score | 1.000 | 0.931 | 0.099 | 0.308 |
+| Abyssinian Nightjar | **Logistic — logit score ★** | **0.757** | 0.931 | 0.086 | 0.254 |
+| Abyssinian Nightjar | Isotonic regression | 0.410 | 0.947 | 0.074 | 0.214 |
+| Abyssinian Nightjar | Platt scaling | 1.000 | 0.931 | 0.099 | 0.308 |
+| Abyssinian Nightjar | Beta calibration | 0.834 | 0.931 | 0.086 | 0.257 |
+| African Black-headed Oriole | All methods | 0.104 (min) | N/A* | — | — |
+| Red-billed Firefinch | Logistic — raw score | 1.000 | 0.708 | 0.055 | 0.221 |
+| Red-billed Firefinch | **Logistic — logit score ★** | **0.9996** | 0.708 | 0.050 | 0.205 |
+| Red-billed Firefinch | Isotonic regression | 0.904 | 0.825 | 0.044 | 0.155 |
+| Red-billed Firefinch | Platt scaling | 1.000 | 0.708 | 0.055 | 0.221 |
+| Red-billed Firefinch | Beta calibration | N/A† | 0.708 | 0.050 | 0.205 |
+| Three-banded Plover | Logistic — raw score | 0.000 | 0.664 | 0.007 | 0.040 |
+| Three-banded Plover | **Logistic — logit score ★** | **0.240** | 0.664 | 0.007 | 0.038 |
+| Three-banded Plover | Isotonic regression | 0.275 | 0.832 | 0.007 | 0.033 |
+| Three-banded Plover | Platt scaling | 0.000 | 0.664 | 0.007 | 0.040 |
+| Three-banded Plover | Beta calibration | 0.233 | 0.664 | 0.007 | 0.038 |
+
+*\* All 150 validated Oriole clips were correct — you cannot compute AUC with only one class.*
+*† Beta calibration failed to fit for the Firefinch due to extreme class imbalance (6 positives vs 95 negatives).*
+
+### What the table tells us and why we still chose the logit-logistic method
+
+Isotonic regression consistently scores best on AUC and Brier. That is expected —
+it is the most flexible method here, free to fit any shape it likes without
+committing to a formula. But that flexibility is also its weakness for this
+application.
+
+Isotonic regression works by memorising the validation data. It can only return a
+probability for scores it has literally seen before. If a new deployment at a
+different site produces confidence scores slightly outside the range covered by
+the validation sample, the model has no answer. It also cannot be inverted
+analytically — there is no simple formula for "the score where probability = 0.99."
+You have to scan numerically, which is fragile.
+
+Logistic regression on the logit scale gives up a small amount of calibration
+quality in exchange for something much more valuable in a production pipeline:
+a model you can write down in two numbers. The threshold formula is one line.
+The stored parameters are two floats. Any new deployment gets the same threshold
+without re-running the model. And crucially, if the validation dataset grows, you
+just re-fit with the new data and the formula updates automatically.
+
+The raw score logistic and Platt scaling both fail badly for different reasons.
+For the Nightjar they produce a threshold of 1.0 — meaning they would classify
+nothing as an observation, ever. For the Plover they produce a threshold of 0.0 —
+meaning they would accept everything. Both failures come from the sigmoid
+compression problem: the raw 0–1 scale packs too many important scores into a
+narrow band near the extremes, and the linear model cannot handle the curvature.
+The logit transform fixes this.
+
+Beta calibration is a sensible middle ground but offers no meaningful improvement
+over the logit-logistic method and struggles on unbalanced species like the Firefinch.
+
+**The logit-scale logistic regression is the right choice: nearly as accurate as
+isotonic regression, analytically invertible, and operationally simple to deploy.**
+
 ---
 
 ## What the calibration curves show
 
-![Calibration curves](outputs/calibration_curves.png)
+![Calibration curves](outputs/bird/calibration_curves.png)
 
 Each panel shows one species. The grey dots scattered at the top and bottom are the
 validated clips — dots near the top are true positives (BirdNET was right), dots near
-the bottom are false positives (BirdNET was wrong). The fitted curve shows how the
-logit-logistic model translates confidence scores into probabilities. The red dashed
-vertical line marks the 99% threshold.
+the bottom are false positives (BirdNET was wrong). The curves show how each of the
+five methods translates confidence scores into probabilities. The red dashed vertical
+line is the 99% threshold from the logit-logistic model.
 
 What to look for in each panel:
 
-- **For the Nightjar**, the curve rises steeply between 0.5 and 0.8, crossing 99%
-  at 0.757.
+- **For the Nightjar**, the curves all rise steeply somewhere between 0.5 and 0.8.
+  The logit-logistic curve (red solid) crosses 99% at 0.757. The raw-score methods
+  (logistic raw and Platt) push the threshold all the way to 1.0 because they
+  cannot model the steep rise properly on the compressed scale.
 
 - **For the Oriole**, all the dots are at the top (all correct) and there is no
   curve to fit. The threshold defaults to the lowest validated score.
 
 - **For the Firefinch**, the dots are almost entirely at the bottom (almost all
-  wrong), and the curve barely climbs above 50% across the whole score range.
+  wrong), and the curves barely climb above 50% across the whole score range.
   Only in the very high 0.9+ range does precision approach 99%.
 
 - **For the Plover**, the dots are overwhelmingly at the top (almost all correct),
@@ -149,7 +230,7 @@ What to look for in each panel:
 
 ## Score distributions: seeing the problem visually
 
-![Score distributions](outputs/score_distributions.png)
+![Score distributions](outputs/bird/score_distributions.png)
 
 These histograms show how the true positive (green) and false positive (red)
 predictions are distributed across confidence scores for each species.
@@ -172,7 +253,7 @@ accuracy and the low threshold needed to reach 99% precision.
 
 ## Precision-recall: the full tradeoff picture
 
-![Precision-recall curves](outputs/precision_recall_curves.png)
+![Precision-recall curves](outputs/bird/precision_recall_curves.png)
 
 A precision-recall curve shows what happens as you adjust the threshold. Moving
 left along the curve means accepting more predictions (higher recall — you catch
@@ -188,6 +269,21 @@ of 0.170 is the damning number — even if you could choose any threshold, you
 cannot get both high precision and high recall for this species at the same time.
 
 ---
+
+## Reliability: do the probabilities actually mean what they say?
+
+![Reliability diagrams](outputs/bird/reliability_diagrams.png)
+
+A reliability diagram answers a simple question: when the model says "80%
+probability of being correct," is it actually right about 80% of the time?
+A perfectly calibrated model sits on the diagonal. Points above the diagonal mean
+the model is underconfident (it says 80% but actually gets it right 90% of the
+time). Points below mean overconfident.
+
+The logit-scale logistic method (red solid) tracks the diagonal most closely,
+particularly for the Nightjar where calibration matters most. The raw-score methods
+tend to be overconfident at high scores — they say "95% sure" when the actual rate
+is lower.
 
 ---
 
@@ -265,8 +361,9 @@ All outputs land in `outputs/bird/`:
 
 - `birdnet_predictions_labelled.csv` — the 29,491 predictions with the `observation` column added
 - `species_thresholds.csv` — the threshold table ready to load into the platform database
+- `calibration_comparison.csv` — full results for all five methods across all species
 - `site_observation_summary.csv` — observation counts per acoustic monitoring site per species
-- `calibration_curves.png`, `score_distributions.png`, `precision_recall_curves.png` — diagnostic plots
+- `calibration_curves.png`, `score_distributions.png`, `precision_recall_curves.png`, `reliability_diagrams.png` — the four diagnostic plots
 
 ---
 
