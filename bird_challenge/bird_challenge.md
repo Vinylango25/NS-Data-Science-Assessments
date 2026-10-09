@@ -122,7 +122,7 @@ That is our threshold. Every prediction above it gets labelled as an observation
 
 ## What the calibration curves show
 
-![Calibration curves](outputs/bird/calibration_curves.png)
+![Calibration curves](outputs/calibration_curves.png)
 
 Each panel shows one species. The grey dots scattered at the top and bottom are the
 validated clips — dots near the top are true positives (BirdNET was right), dots near
@@ -149,7 +149,7 @@ What to look for in each panel:
 
 ## Score distributions: seeing the problem visually
 
-![Score distributions](outputs/bird/score_distributions.png)
+![Score distributions](outputs/score_distributions.png)
 
 These histograms show how the true positive (green) and false positive (red)
 predictions are distributed across confidence scores for each species.
@@ -172,7 +172,7 @@ accuracy and the low threshold needed to reach 99% precision.
 
 ## Precision-recall: the full tradeoff picture
 
-![Precision-recall curves](outputs/bird/precision_recall_curves.png)
+![Precision-recall curves](outputs/precision_recall_curves.png)
 
 A precision-recall curve shows what happens as you adjust the threshold. Moving
 left along the curve means accepting more predictions (higher recall — you catch
@@ -191,7 +191,7 @@ cannot get both high precision and high recall for this species at the same time
 
 ## Reliability: do the probabilities actually mean what they say?
 
-![Reliability diagrams](outputs/bird/reliability_diagrams.png)
+![Reliability diagrams](outputs/reliability_diagrams.png)
 
 A reliability diagram answers a simple question: when the model says "80%
 probability of being correct," is it actually right about 80% of the time?
