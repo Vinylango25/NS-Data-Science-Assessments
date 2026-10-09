@@ -31,23 +31,23 @@ Firefinch detections or discard valid Nightjar observations.
 ## Approach
 
 I applied a logit transform to reverse BirdNET's internal sigmoid compression, then
-fit and compared 5 calibration models per species:
+fit a logistic regression per species on the logit-transformed scores:
 
-| Method | Description |
-|--------|-------------|
-| M1 | Logistic regression on raw scores |
-| M2 ★ | Logistic regression on logit-transformed scores (chosen) |
-| M3 | Isotonic regression |
-| M4 | Platt scaling |
-| M5 | Beta calibration |
+```
+pr(BirdNET is correct) = sigmoid( β₀ + β₁ × logit_score )
+```
 
-Models were evaluated on AUC, Brier score, and log-loss. M2 was selected as the
-production method — analytically invertible and robust across species. The 99%
-threshold per species is derived as:
+The 99%-precision threshold is derived analytically:
 
 ```
 threshold = sigmoid( ( ln(0.99/0.01) − β₀ ) / β₁ )
 ```
+
+Species with no positive validation examples use a fallback: the minimum observed
+confidence score. The `bird_challenge.md` technical write-up discusses why this
+method was chosen over alternatives (isotonic regression, Platt scaling, beta
+calibration) — the logit-logistic model is analytically invertible, deployable
+with two floats per species, and robust across species.
 
 ## Results
 
